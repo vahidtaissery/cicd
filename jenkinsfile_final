@@ -56,9 +56,9 @@ pipeline {
                         git config user.email "vahid@gmail.com"
                         git config user.name "vahid"
                         git checkout main
-                        git pull origin main  // Correct usage to fetch and merge changes from remote main branch
-                        sed -i "s/cicd:.*/cicd:${BUILD_NUMBER}/g" deployment.yml
-                        git add deployment.yml
+                        git pull origin main
+                        sed -i "s/cicd:.*/cicd:${BUILD_NUMBER}/g" deploymentfiles/deployment.yml
+                        git add deploymentfiles/deployment.yml
                         git commit -m "Update deployment image to version ${BUILD_NUMBER}"
                         git push origin main
                     '''
