@@ -55,10 +55,9 @@ pipeline {
                     sh '''
                         git config user.email "vahid@gmail.com"
                         git config user.name "vahid"
-                        git checkout main
-                        git pull origin main
+                        BUILD_NUMBER=${BUILD_NUMBER}
                         sed -i "s/cicd:.*/cicd:${BUILD_NUMBER}/g" deploymentfiles/deployment.yml
-                        git add deploymentfiles/deployment.yml
+                        git add .
                         git commit -m "Update deployment image to version ${BUILD_NUMBER}"
                         git push origin main
                     '''
