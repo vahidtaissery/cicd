@@ -9,7 +9,7 @@ pipeline {
         stage('checkout') {
             steps {
                 echo 'Cloning GitHub Repo'
-                git branch: 'main', url: 'https://github.com/devopstraininghub/mindcircuit13.git'
+                git branch: 'main', url: 'git@github.com:vahidtaissery/cicd.git'
             }
         }
 
@@ -62,7 +62,6 @@ pipeline {
                         sed -i "s/cicd:.*/cicd:${BUILD_NUMBER}/g" deployment.yml
                         git add deployment.yml
                         git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                        git remote set-url origin git@github.com:vahidtaissery/cicd.git  // Update remote URL to SSH
                         git push origin main
                     '''
                 }
