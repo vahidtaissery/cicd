@@ -1,98 +1,72 @@
 pipeline {
-    agent any
+    agent { label 'javacicd' }
 
-
-       tools {
-        maven 'maven3'
+    tools {
+        maven 'mvn'
     }
 
     stages {
-      stage('checkout') {
+        stage('checkout') {
             steps {
-                echo 'Cloning GIT HUB Repo '
-				git branch: 'main', url: 'https://github.com/devopstraininghub/mindcircuit13.git'
-            }  
-        }
-		
-		
-		
-	 stage('sonar') {
-            steps {
-                echo 'scanning project'
-                sh 'ls -ltr'
-                
-                sh ''' mvn sonar:sonar \\
-                      -Dsonar.host.url=http://44.210.116.12:9000 \\
-                      -Dsonar.login=squ_a46b6947d43a812180415ff94219120d2ddebcea'''
+                echo 'Cloning GitHub Repo'
+                git branch: 'main', url: 'https://github.com/devopstraininghub/mindcircuit13.git'
             }
-    	}
-		
-		
-		
+        }
+
+        stage('sonar') {
+            steps {
+                echo 'Scanning project'
+                sh 'ls -ltr'
+
+                sh '''mvn sonar:sonar \\
+                      -Dsonar.host.url=http://3.87.32.76:9000 \\
+                      -Dsonar.login=squ_83f3b079ee8c35bfeed027f37c54d86c2618d560'''
+            }
+        }
+
         stage('Build Artifact') {
             steps {
-                echo 'Build Artifact'
-				sh 'mvn clean package'
+                echo 'Building Artifact'
+                sh 'mvn clean package'
             }
         }
-		
-		
-		
+
         stage('Docker Image') {
             steps {
-                echo 'Docker Image building'
-				sh 'docker build -t devopshubg333/batch13:${BUILD_NUMBER} .'
+                echo 'Building Docker Image'
+                sh 'docker build -t taisserysuhaib/cicd:${BUILD_NUMBER} .'
             }
         }
-		
-		
-       stage('Push to Dockerhub') {
-            steps {
-			 script {
-			withCredentials([string(credentialsId: 'dockerhub', variable: 'dockerhub')]) 
-			{
-            sh 'docker login -u devopshubg333 -p ${dockerhub}'
-			
-			 }
-			   sh 'docker push devopshubg333/batch13:${BUILD_NUMBER}'
-			   
-           
-				}
-				
-            }
-        }
-		
-		
-    stage('Update Deployment File') {
-		
-		 environment {
-            GIT_REPO_NAME = "mindcircuit13"
-            GIT_USER_NAME = "devopstraininghub"
-        }
-		
-            steps {
-                echo 'Update Deployment File'
-				withCredentials([string(credentialsId: 'githubtoken', variable: 'githubtoken')]) 
-				{
-                  sh '''
-                    git config user.email "gorekarmadhu@gmail.com"
-                    git config user.name "Madhu"
-                    BUILD_NUMBER=${BUILD_NUMBER}
-                    sed -i "s/batch13:.*/batch13:${BUILD_NUMBER}/g" deploymentfiles/deployment.yml
-                    git add .
-                    
-                    git commit -m "Update deployment image to version ${BUILD_NUMBER}"
 
-                    git push https://${githubtoken}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
-                '''
-				  
-                 }
-				
+        stage('Push to Dockerhub') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'dockerhub', variable: 'dockerhub')]) {
+                        sh "docker login -u taisserysuhaib -p ${dockerhub}"
+                        sh "docker push taisserysuhaib/cicd:${BUILD_NUMBER}"
+                    }
+                }
             }
         }
-		
-		
-			
+
+        stage('Update Deployment File') {
+            steps {
+                echo 'Updating Deployment File'
+                withCredentials([string(credentialsId: 'githubtoken', variable: 'githubtoken')]) {
+                    sh '''
+                        git config user.email "vahid@gmail.com"
+                        git config user.name "vahid"
+                        git checkout main
+                        git pull origin main  // Fetch and merge changes from remote main branch
+                        BUILD_NUMBER=${BUILD_NUMBER}
+                        sed -i "s/cicd:.*/cicd:${BUILD_NUMBER}/g" deployment.yml
+                        git add deployment.yml
+                        git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                        git remote set-url origin git@github.com:vahidtaissery/cicd.git  // Update remote URL to SSH
+                        git push origin main
+                    '''
+                }
+            }
+        }
     }
-
 }
