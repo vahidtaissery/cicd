@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: mc-app
-        image: taisserysuhaib/cicd:14
+        image: taisserysuhaib/cicd:15
         ports:
         - containerPort: 8080
 
