@@ -1,5 +1,7 @@
 pipeline {
-    agent { label 'javacicd' }
+    agent { 
+        label 'javacicd' 
+    }
 
     tools {
         maven 'mvn'
@@ -17,9 +19,11 @@ pipeline {
             steps {
                 echo 'Scanning project'
                 sh 'ls -ltr'
-                sh '''mvn sonar:sonar \\
-                      -Dsonar.host.url=http://44.211.206.165:9000 \\
-                      -Dsonar.login=squ_4fc9113464bcb92f63c585e45b6c6b38df263427'''
+                sh '''
+                    mvn sonar:sonar \
+                    -Dsonar.host.url=http://44.211.206.165:9000 \
+                    -Dsonar.login=squ_4fc9113464bcb92f63c585e45b6c6b38df263427
+                '''
             }
         }
 
@@ -50,13 +54,18 @@ pipeline {
 
         stage('Update Deployment File') {
             steps {
-                echo 'Updating Deployment File'
-                withCredentials([string(credentialsId: 'githubtoken', variable: 'githubtoken')]) {
+                script {
+                    // Configure Git user details
                     sh '''
                         git config user.email "vahid@gmail.com"
                         git config user.name "vahid"
-                        BUILD_NUMBER=${BUILD_NUMBER}
-                        sed -i "s/cicd:.*/cicd:${BUILD_NUMBER}/g" deploymentfiles/deployment.yml
+                    '''
+
+                    // Replace the image tag in deployment.yml
+                    sh "sed -i 's|cicd:.*|cicd:${BUILD_NUMBER}|g' deploymentfiles/deployment.yml"
+
+                    // Stage changes, commit and push
+                    sh '''
                         git add .
                         git commit -m "Update deployment image to version ${BUILD_NUMBER}"
                         git push origin main
